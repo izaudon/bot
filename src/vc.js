@@ -1,9 +1,3 @@
-const kikisen = {
-  "825285304050515988": "1034368599101546558",
-  "1000091013123154001": "1034396470318743572"
-
-}
-
 export const vcHandler = client => async (oldState, newState) => {
   if (newState.channel && !oldState.channel) {
     const channel = newState.channel;
