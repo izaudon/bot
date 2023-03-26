@@ -1,4 +1,9 @@
 import { setTimeout } from "node:timers/promises"
+import { Client, EmbedBuilder, GatewayIntentBits } from "discord.js"
+import { config } from "dotenv"
+import ping from "ping"
+
+config()
 
 export const handler = async msg => {
   if(msg.author.bot) return
@@ -8,7 +13,7 @@ export const handler = async msg => {
   if (/みちこ|路子|コロちゃん/.test(msg.content)) {
     msg.channel.send("ロコはロコです！");
   }
-  if (/ROCO|Roco|roco|🇷 ?(🇴|🅾️) ?🇨 ?(🇴|🅾️) ?/.test(msg.content)){
+  if (/ROCO|Roco|roco|🇷?(🇴|🅾️)?🇨?(🇴|🅾️)?/.test(msg.content)){
     let react = ["🇷", "🅾️", "🇨", "🇴"]
     for (let i = 0;i<4;i++){
       msg.react(react[i])
@@ -17,17 +22,23 @@ export const handler = async msg => {
   if (/art|Art|ART|アート|芸術/.test(msg.content)){
     msg.react("🎨")
   }
-  if(!/ロコ|ろこ|ROCO|roco|Roco|🇷 ?(🇴|🅾️) ?🇨 ?(🇴|🅾️) ?/.test(msg.content)) return
+  if(!/ロコ|ろこ|ROCO|roco|Roco|🇷?(🇴|🅾️)?🇨?(🇴|🅾️)?/.test(msg.content)) return
 
   switch(true) {
     case /みくじ/.test(msg.content): {
-      let arr = ["> \[**大吉**\]\nエクセレントです！", "\> [**吉**\]\nグレイトです！", "> \[**中吉**\]\nベリーグッドです！", "> \[**小吉**\]\nグッドです！", "> \[**末吉**\]\nナイスです！", "> \[**凶**\]\nバッドですね……", "> \[**大凶**\]\nテリブルです……", "> \[**ロコ吉**\]\nファンタスティックです!", "> \[**チュパ吉**\]\nラッキーです……？", "> \[**崖吉**\]\nラッキーなんですかね……？", "> \[**百万吉**\]\nワンダフルです！", "> \[**令和**\]\n🤔"];
-      let weight = [5, 10, 7, 7, 5, 3, 2, 1, 3, 3, 4, 2];
-      fortune(arr, weight);
-      break;
+      let arr = ["> \[**大吉**\]\nエクセレントです！", "\> [**吉**\]\nグレイトです！", "> \[**中吉**\]\nベリーグッドです！", "> \[**小吉**\]\nグッドです！", "> \[**末吉**\]\nナイスです！", "> \[**凶**\]\nバッドですね……", "> \[**大凶**\]\nテリブルです……", "> \[**ロコ吉**\]\nファンタスティックです！", "> \[**大々吉**]\nアメイジングです！", "> \[**チュパ吉**\]\nラッキーです……？", "> \[**崖吉**\]\nラッキーなんですかね……？", "> \[**百万吉**\]\nワンダフルです！", "> \[**令和**\]\n🤔"];
+      let weight = [5, 10, 7, 7, 5, 3, 2, 1, 3, 3, 4, 2]
+      fortune(arr, weight)
+      break
     }
+    case /投票|集計/.test(msg.content):
+      poll(msg.content)
+      break
     case /オウム返し|真似/.test(msg.content):
       parrot()
+      break
+    case /ping/.test(msg.content):
+      pingPong(msg.cleanContent)
       break
     case /かわい|可愛|カワイ|えらい|偉|すご|凄|流石|さすが/.test(msg.content):
       msg.channel.send("えへへ。サンクスです〜")
@@ -41,9 +52,6 @@ export const handler = async msg => {
     case /おはよ/.test(msg.content):
       msg.channel.send("おはようございます、プロデューサー！")
       break
-    case /こんにち/.test(msg.content):
-      msg.channel.send("こんにちは、プロデューサー！")
-      break
     case /こんばん/.test(msg.content):
       msg.channel.send("こんばんは、プロデューサー！")
       break
@@ -54,13 +62,13 @@ export const handler = async msg => {
       msg.channel.send("何かあったのか、じゃないで")
       break
     case /はと|ハト|鳩|ぽっぽ|っぽ|ポッポ|ッポ/.test(msg.content):
-      msg.channel.send("ぽっぽ〜です!")
+      msg.channel.send("ぽっぽ〜です！")
       break
-    case /アホ|あほ|阿呆|馬鹿|バカ|ばか|うんち|うんこ|クソ|くそ|糞|ボケ|ぼけ|カス|はげ|ハゲ|排泄/.test(msg.content):
+    case /アホ|あほ|阿呆|馬鹿|バカ|ばか|うんち|うんこ|クソ|くそ|糞|ボケ|ぼけ|カス|はげ|ハゲ|>排泄/.test(msg.content):
       msg.channel.send("そんなこと言うなんて、ひどいです……")
       break
     case /バイバイ|さよなら|さようなら|またね|じゃ.*ね/.test(msg.content):
-      msg.channel.send("バイバイです!プロデューサー！")
+      msg.channel.send("バイバイです！プロデューサー！")
       break
     case /やった(〜|ー|あ|ぁ)|わ(ー|〜|あ|ぁ)い/.test(msg.content):
       msg.channel.send("コングラッチュレーションです！")
@@ -75,7 +83,7 @@ export const handler = async msg => {
       break
     }
     case /存在意義|レゾンテートル/.test(msg.content): {
-      let res = ["ロコのレゾンデートルって", "レプレゼンテーションそのものなんです！", "ロコモーティブにグラデーションする", "パッションのマニフェスト、プレゼンスがクレッシェンドして", "パラダイムシフトしちゃえば", "エモーションをコミットできちゃうんですよ！", "それって……って、聞いてますか？プロデューサー！"]
+      let res = ["ロコのレゾンデートルって", "レプレゼンテーションそのものなんです！", "ロコモーティブにグラデーションする", "パッションのマニフェスト、プレゼンスがクレッシェンドして", "パラダイムシフトしちゃえば", "エモーションをコミットできちゃうんですよ！", "それって……って聞いてますか？プロデューサー！"]
       for (let i = 0;i<7;i++){
         msg.channel.sendTyping()
         await setTimeout(1200)
@@ -100,31 +108,150 @@ export const handler = async msg => {
     }
   }
 
-  function parrot(){
-    msg.channel.send("イミテーションですね！")
-    const filter = msg => !msg.author.bot
-    const collected = msg.channel.awaitMessages({filter, max: 1, time: 20 * 1000 })
-    .then(collected => {
-      if(!collected.size) return msg.channel.send("何か言ってくださいよ〜……")
-      msg.channel.send(collected.first().content)
-    })
+  function fortune(element, weight){
+    let totalWeight = 0
+    for(let value of weight) totalWeight += value
+    let randomNumber = Math.floor(Math.random()*totalWeight)
+    for(let [index, value] of weight.entries()){
+      if(randomNumber > value){
+        randomNumber -= value
+      }else{
+        msg.channel.send(element[index])
+        return
+      }
+    }
   }
 
-  function fortune(arr, weight){
-      let totalweight=0;
-      for(var i=0;i<weight.length;i++){
-        totalweight+=weight[i];
-      }
-      let random = Math.floor(Math.random()*totalweight);
-      for(var i = 0;i<weight.length;i++){
-        if(random<weight[i]){
-          msg.channel.send(arr[i])
-          return;
-        }else{
-          random -= weight[i];
-        }
-      }
-      console.log("lottery error");
+  async function awaitMsg(){
+    const filter = msg => !msg.author.bot
+    const collected = await msg.channel.awaitMessages({filter, max: 1, time: 30*1000})
+    if(!collected.size) return msg.channel.send("何か言ってくださいよ〜……")
+    return collected.first()
+  }
+
+  async function parrot(){
+    msg.channel.send("イミテーションですね！")
+    msg.channel.send(await awaitMsg().content)
+  }
+
+  async function pingPong(message){
+    const elements = message.split(" ")
+    if(elements.length < 2) return rawPong()
+    const link = new Array()
+    for(let value of elements){
+      if(checkUrl(value)) link.push(value)
     }
+    if(link.length === 0) return rawPong()
+    for(let domain of link){
+      let url = 0
+      if(/https/.test(domain)){
+        url = domain.replace("https://", "")
+      }else if(/http/.test){
+        url = domain.replace("http://","")
+      }
+      let result = await ping.promise.probe(url, {
+        timeout: 10000,
+        extra: ["-i","2"]
+      })
+      console.log(result)
+      if(!result.alive) msg.channel.send(`${url}にコネクトできませんでした……`)
+      if(result.alive) msg.channel.send(`${url}にコネクトできました！(${result.time}ms)`)
+    }
+
+    function rawPong(){
+      msg.channel.send(":ping_pong:")
+      msg.channel.send("pongです！")
+    }
+  }
+
+  function checkUrl(string){
+    const filter = /https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/.test(string)
+    if(filter){
+      return true
+    }else{
+      return false
+    }
+  }
+
+  function checkEmpty(element){
+    return element !== undefined && element !== null
+  }
+
+  function margeResult(emoji, choice){
+    const result = new Array()
+    for(let [index, value] of choice.entries()){
+      result.push(`${emoji[index]} : ${value}`)
+    }
+    return result
+  }
+
+  async function poll(message){
+    const client = new Client({
+      intents:[
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildMessageReactions,
+      ]
+    })
+    const emojis = [`🇦`,`🇧`,`🇨`,`🇩`,`🇪`,`🇫`,`🇬`,`🇭`,`🇮`,`🇯`,`🇰`,`🇱`,`🇲`,`🇳`,`🇴`]
+    if(/投票/.test(message)){
+      msg.channel.send("ディテールを教えてください！\n_` <Title> <1> <2> <3> ... <n> `_")
+      const origin = await awaitMsg()
+      const detail = origin.content
+      const elements = detail.split(" ")
+      const [title, ...dist] = elements
+      const choice = [...(new Set(dist))]
+      const margeChoice = margeResult(emojis, choice)
+      if(choice.length < 2 || choice.length > emojis.length){
+        return msg.channel.send(`チョイスは2～${emojis.length}コにしてください！`)
+      }
+      let embed = await new EmbedBuilder()
+        .setTitle(`Vote: ${title}`)
+        .setFields({
+          name: `by ${origin.member.displayName}`,
+          value: `\n`
+        },
+        {
+          name: `${margeChoice.join("\n")}`,
+          value: `\n`
+        })
+        .setTimestamp()
+      const pollEmbed = await msg.channel.send({embeds: [embed]})
+      msg.channel.send("集計時は\n `ロコ集計#"+ pollEmbed.id+"#"+pollEmbed.channel.id+"`\n とセンドしてくださいね！")
+      for(let [index, value] of choice.entries()){
+        pollEmbed.react(emojis[index])
+      }
+  }else if(/集計/.test(message)){
+      const elements = msg.content.split("#")
+      if(elements.length !== 3) return msg.channel.send("コレクトなフォーマットでセンドしてください！")
+      const [command, messageId, channelId] = elements
+      const channel = await client.channels.cache.get(channelId)
+      const pollMessage = await msg.channel.messages.fetch(messageId)
+      const gld = msg.guild
+      let votedNames = new Array()
+      for(let i = 0;pollMessage.reactions.cache.get(emojis[i]);i++){
+        let reactedUser = await pollMessage.reactions.cache.get(emojis[i]).users.fetch()
+        let userId = reactedUser.filter(usr => usr.id !== process.env.CLIENT_ID).map(usr => usr.id)
+        let names = new Array()
+        for(let id of userId){
+          names.push(await gld.members.fetch(id))
+        }
+        votedNames[i] = `${names.length}票(${names.join(", ")})`
+      }
+      votedNames = votedNames.filter(checkEmpty)
+      const margeChoice = margeResult(emojis, votedNames)
+      let embed = await new EmbedBuilder()
+        .setTitle(`投票結果`)
+        .setFields({
+          name: `by ${msg.member.displayName}`,
+          value: `${margeChoice.join("\n")}`
+        })
+        .setTimestamp()
+      pollMessage.reply({embeds: [embed]})
+    }
+  }
+
 
 }
