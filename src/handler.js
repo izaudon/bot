@@ -26,9 +26,15 @@ export const handler = async msg => {
 
   switch(true) {
     case /みくじ/.test(msg.content): {
-      let arr = ["> \[**大吉**\]\nエクセレントです！", "\> [**吉**\]\nグレイトです！", "> \[**中吉**\]\nベリーグッドです！", "> \[**小吉**\]\nグッドです！", "> \[**末吉**\]\nナイスです！", "> \[**凶**\]\nバッドですね……", "> \[**大凶**\]\nテリブルです……", "> \[**ロコ吉**\]\nファンタスティックです！", "> \[**大々吉**]\nアメイジングです！", "> \[**チュパ吉**\]\nラッキーです……？", "> \[**崖吉**\]\nラッキーなんですかね……？", "> \[**百万吉**\]\nワンダフルです！", "> \[**令和**\]\n🤔"];
+      let arr = ["> \[**大吉**\]", "\> [**吉**\]", "> \[**中吉**\]", "> \[**小吉**\]", "> \[**末吉**\]", "> \[**凶**\]", "> \[**大凶**\]", "> \[**ロコ吉**\]", "> \[**大々吉**]", "> \[**チュパ吉**\]", "> \[**崖吉**\]", "> \[**百万吉**\]", "> \[**令和**\]"]
+      let arrComment = ["\nエクセレントです！", "\nグレイトです！", "\nベリーグッドです！", "\nグッドです！", "\nナイスです！", "\nバッドですね……", "\nテリブルです……", "\nファンタスティックです！", "\nアメイジングです！", "\nラッキーです……？", "\nラッキーなんですかね……？", "\nワンダフルです！", "\n🤔"]
       let weight = [5, 10, 7, 7, 5, 3, 2, 1, 3, 3, 4, 2]
-      fortune(arr, weight)
+      if(/\d/.test(msg.content)){
+        loopFortune(msg.content, arr, weight)
+      }else{
+        let arrResult = await margeArray(arr, arrComment)
+        fortune(arrResult, weight)
+      }
       break
     }
     case /投票|集計/.test(msg.content):
@@ -108,6 +114,14 @@ export const handler = async msg => {
     }
   }
 
+  function margeArray(element, add){
+    const result = new Array()
+    for(let [index, value] of element.entries()){
+      result.push(`${value + add[index]}`)
+    }
+    return result
+  }
+
   function fortune(element, weight){
     let totalWeight = 0
     for(let value of weight) totalWeight += value
@@ -119,6 +133,16 @@ export const handler = async msg => {
         msg.channel.send(element[index])
         return
       }
+    }
+  }
+
+
+  async function loopFortune(message, element, weight){
+    let times = message.replace(/[^0-9]/g, "")
+    if(times > 10) times = 10
+    for(let i=0;i < times;i++){
+      await setTimeout(1000)
+      fortune(element, weight)
     }
   }
 
